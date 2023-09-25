@@ -9,6 +9,28 @@ Plug 'neoclide/coc.nvim', {'tag': '*', 'branch': 'release'}
 
 let g:coc_global_extensions = ['coc-emmet', 'coc-css', 'coc-html', 'coc-json', 'coc-prettier', 'coc-tsserver']
 
+" post install (yarn install | npm install) then load plugin only for editing supported files
+Plug 'prettier/vim-prettier', {
+  \ 'do': 'yarn install --frozen-lockfile --production',
+  \ 'for': ['javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphql', 'markdown', 'vue', 'svelte', 'yaml', 'html'] }
+
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim', { 'branch': 'master',tag': '0.1.3' }
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+
+Plug 'neovim/nvim-lspconfig'
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'hrsh7th/cmp-buffer'
+Plug 'hrsh7th/cmp-path'
+Plug 'hrsh7th/cmp-cmdline'
+Plug 'hrsh7th/nvim-cmp'
+
+Plug 'akinsho/toggleterm.nvim', {'tag' : '*'}
+Plug 'NeogitOrg/neogit'
+
+Plug 'windwp/nvim-autopairs'
+
+
 " ctrl + b => file explorer
 
 Plug 'scrooloose/nerdtree'
@@ -22,6 +44,8 @@ let g:NERDTreeStatusline = ''
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 " Toggle
 nnoremap <silent> <C-b> :NERDTreeToggle<CR>
+
+let g:prettier#autoformat = 1
 
 " File Search
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -80,3 +104,24 @@ let g:fzf_action = {
   \}
 let $FZF_DEFAULT_COMMAND = 'ag -g ""'
 
+
+
+
+
+" Find files using Telescope command-line sugar.
+nnoremap <leader>ff <cmd>Telescope find_files<cr>
+nnoremap <leader>fg <cmd>Telescope live_grep<cr>
+nnoremap <leader>fb <cmd>Telescope buffers<cr>
+nnoremap <leader>fh <cmd>Telescope help_tags<cr>
+
+" Using Lua functions
+nnoremap <leader>ff <cmd>lua require('telescope.builtin').find_files()<cr>
+nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
+nnoremap <leader>fb <cmd>lua require('telescope.builtin').buffers()<cr>
+nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
+
+map <ScrollWheelUp> <C-B>
+map <ScrollWheelDown> <C-F>
+lua require("toggleterm").setup()
+
+lua require("nvim-autopairs").setup {}
