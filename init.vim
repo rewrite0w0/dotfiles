@@ -1,6 +1,7 @@
 call plug#begin('~/.config/nvim/plugged')
 
 Plug 'dracula/vim'
+Plug 'folke/tokyonight.nvim'
 
 " Use release branch
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
@@ -86,7 +87,8 @@ if (has("termguicolors"))
  set termguicolors
 endif
 syntax enable
-colorscheme dracula
+" colorscheme dracula
+colorscheme tokyonight-moon
 
 
 
@@ -149,8 +151,7 @@ nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
 nnoremap <leader>fb <cmd>lua require('telescope.builtin').buffers()<cr>
 nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
 
-map <ScrollWheelUp> <C-B>
-map <ScrollWheelDown> <C-F>
+
 lua require("toggleterm").setup()
 
 lua require("nvim-autopairs").setup {}
