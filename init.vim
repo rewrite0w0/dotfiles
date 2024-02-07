@@ -8,7 +8,7 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 " Or latest tag
 Plug 'neoclide/coc.nvim', {'tag': '*', 'branch': 'release'}
 
-let g:coc_global_extensions = ['coc-emmet', 'coc-css', 'coc-html', 'coc-json', 'coc-prettier', 'coc-tsserver', 'coc-deno', '@yaegassy/coc-ruff', 'coc-rust-analyzer']
+let g:coc_global_extensions = ['coc-json', 'coc-prettier', 'coc-tsserver', 'coc-deno']
 
 
 " post install (yarn install | npm install) then load plugin only for editing supported files
