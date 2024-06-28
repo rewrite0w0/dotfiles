@@ -1,22 +1,27 @@
 call plug#begin('~/.config/nvim/plugged')
 
-Plug 'dracula/vim'
 Plug 'folke/tokyonight.nvim'
+Plug 'daltonmenezes/aura-theme', { 'rtp': 'packages/neovim' }
 
 " Use release branch
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 " Or latest tag
 Plug 'neoclide/coc.nvim', {'tag': '*', 'branch': 'release'}
 
-let g:coc_global_extensions = ['coc-json', 'coc-prettier', 'coc-tsserver', 'coc-deno']
+Plug 'rust-lang/rust.vim'
+
+let g:coc_global_extensions = ['coc-json', 'coc-prettier', 'coc-tsserver']
 
 
 " post install (yarn install | npm install) then load plugin only for editing supported files
 Plug 'prettier/vim-prettier', {
   \ 'do': 'yarn install --frozen-lockfile --production',
-  \ 'for': ['javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphql', 'markdown', 'vue', 'svelte', 'yaml', 'html'] }
+  \ 'for': ['javascript', 'typescript', 'css', 'json', 'markdown', 'vue', 'svelte', 'yaml', 'html', 'javascriptreact' , 'typescriptreact'] }
 
-Plug 'rust-lang/rust.vim'
+" Prettier 자동 포맷 설정
+autocmd BufWritePre *.js, *.jsx, *.json, *.css, *.md, *.ts, *.tsx PrettierAsync
+
+
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.3' }
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
@@ -45,6 +50,11 @@ let g:NERDTreeIgnore = []
 let g:NERDTreeStatusline = ''
 " Automaticaly close nvim if NERDTree is only thing left open
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
+if exists("g:neovide")
+    " Put anything you want to happen only in Neovide here
+endif
+
 " Toggle
 nnoremap <silent> <C-b> :NERDTreeToggle<CR>
 
@@ -60,17 +70,17 @@ Plug 'vim-airline/vim-airline-themes'
 let g:airline#extensions#tabline#enabled = 1
 
 "" vim-airline
-" 상태 라인 게시하는 항목 변경
+" ステータスラインに表示する項目を変更する
 let g:airline#extensions#default#layout = [
   \ [ 'a', 'b', 'c' ],
   \ ['z']
   \ ]
 let g:airline_section_c = '%t %M'
 let g:airline_section_z = get(g:, 'airline_linecolumn_prefix', '').'%3l:%-2v'
-" 변경이 없으면 diff 행수 보이지 않게
+" 変更がなければdiffの行数を表示しない
 let g:airline#extensions#hunks#non_zero_only = 1 
 
-" 탭 라인 표기 변경
+" タブラインの表示を変更する
 let g:airline#extensions#tabline#fnamemod = ':t'
 let g:airline#extensions#tabline#show_buffers = 1
 let g:airline#extensions#tabline#show_splits = 0
@@ -88,8 +98,10 @@ if (has("termguicolors"))
  set termguicolors
 endif
 syntax enable
-" colorscheme dracula
-colorscheme tokyonight-moon
+
+
+colorscheme aura-dark
+" colorscheme tokyonight-day
 
 
 
@@ -152,7 +164,8 @@ nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
 nnoremap <leader>fb <cmd>lua require('telescope.builtin').buffers()<cr>
 nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
 
-
+" map <ScrollWheelUp> <C-B>
+" map <ScrollWheelDown> <C-F>
 lua require("toggleterm").setup()
 
 lua require("nvim-autopairs").setup {}
@@ -162,19 +175,20 @@ nmap <Leader>f <Plug>(prettier-format)
 " Range formatting in visual mode
 xmap <Leader>f <Plug>(prettier-format)
 
-"" git 조작
-" g] 변경된 곳으로 이동
+"" git操作
+" g]で前の変更箇所へ移動する
 nnoremap g[ :GitGutterPrevHunk<CR>
-" g[ 다음 장소로 이동
+" g[で次の変更箇所へ移動する
 nnoremap g] :GitGutterNextHunk<CR>
-" gh diff 하이라이트
+" ghでdiffをハイライトする
 nnoremap gh :GitGutterLineHighlightsToggle<CR>
-" gp 커서 diff 표시
+" gpでカーソル行のdiffを表示する
 nnoremap gp :GitGutterPreviewHunk<CR>
-" 기호 색 변경
+" 記号の色を変更する
 highlight GitGutterAdd ctermfg=green
 highlight GitGutterChange ctermfg=blue
 highlight GitGutterDelete ctermfg=red
 
-"" 반영 속도 빠르게 (기본은 4000ms)
+"" 反映時間を短くする(デフォルトは4000ms)
 set updatetime=250
+
