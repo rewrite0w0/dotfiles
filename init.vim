@@ -14,12 +14,10 @@ let g:coc_global_extensions = ['coc-json', 'coc-prettier', 'coc-tsserver']
 
 
 " post install (yarn install | npm install) then load plugin only for editing supported files
-Plug 'prettier/vim-prettier', {
-  \ 'do': 'yarn install --frozen-lockfile --production',
-  \ 'for': ['javascript', 'typescript', 'css', 'json', 'markdown', 'vue', 'svelte', 'yaml', 'html', 'javascriptreact' , 'typescriptreact'] }
+Plug 'prettier/vim-prettier', {'for': ['javascript', 'typescript', 'css', 'json', 'markdown', 'vue', 'svelte', 'yaml', 'html', 'javascriptreact' , 'typescriptreact'] }
 
 " Prettier 자동 포맷 설정
-autocmd BufWritePre *.js, *.jsx, *.json, *.css, *.md, *.ts, *.tsx PrettierAsync
+autocmd BufWritePre *.js,*.jsx,*.json,*.css,*.md,*.ts,*.tsx PrettierAsync
 
 
 Plug 'nvim-lua/plenary.nvim'
