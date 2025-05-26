@@ -23,12 +23,8 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
             vim.cmd([[colorscheme tokyonight-storm]])
         end,
     },
-    -- 자동 완성 및 LSP: coc.nvim
-    { 'neoclide/coc.nvim', branch = 'release' },  -- coc.nvim 플러그인
-    -- Rust 언어 지원
-    'rust-lang/rust.vim',  -- Rust 파일에 대한 구문 강조 및 포맷팅 지원
     -- 코드 포맷팅: vim-prettier
-    { 'prettier/vim-prettier', ft = {'javascript', 'typescript', 'css', 'json', 'markdown', 'html', 'javascriptreact', 'typescriptreact',}, branch = 'latest' },
+    { 'prettier/vim-prettier', ft = {'javascript', 'typescript', 'css', 'json', 'markdown', 'html', 'javascriptreact', 'typescriptreact'}},
     -- Lua 유틸리티: plenary.nvim
     'nvim-lua/plenary.nvim',  -- telescope.nvim 등 Lua 플러그인의 공통 유틸리티
     -- 파일/텍스트 검색: telescope.nvim
@@ -57,6 +53,41 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
     'airblade/vim-gitgutter',  -- Git 변경 내역을 라인 옆에 표시
     { 'preservim/nerdtree' },
     { 'ryanoasis/vim-devicons' },
+	 {
+        'hrsh7th/nvim-cmp', -- The main completion plugin
+        dependencies = {
+            'hrsh7th/cmp-nvim-lsp', -- LSP source for nvim-cmp
+            'hrsh7th/cmp-buffer', -- Buffer completions
+            'hrsh7th/cmp-path', -- Path completions
+            'hrsh7th/cmp-cmdline', -- Command line completions
+            'L3MON4D3/LuaSnip', -- Snippet engine
+            'saadparwaiz1/cmp_luasnip', -- Snippet completions
+        },
+        config = function()
+            local cmp = require('cmp')
+            cmp.setup({
+                snippet = {
+                    expand = function(args)
+                        require('luasnip').lsp_expand(args.body) -- For snippet support
+                    end,
+                },
+                mapping = {
+                    ['<C-n>'] = cmp.mapping.select_next_item(),
+                    ['<C-p>'] = cmp.mapping.select_prev_item(),
+                    ['<C-Space>'] = cmp.mapping.complete(),
+                    ['<C-e>'] = cmp.mapping.close(),
+                    ['<CR>'] = cmp.mapping.confirm({ select = true }),
+                },
+                sources = {
+                    { name = 'nvim_lsp' },
+                    { name = 'buffer' },
+                    { name = 'path' },
+                    { name = 'cmdline' },
+                },
+            })
+        end,
+    },
+    'neovim/nvim-lspconfig', -- LSP configuration	
     {
         "yetone/avante.nvim",
         event = "VeryLazy",
@@ -102,17 +133,7 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
                 ft = { "markdown", "Avante" },
             },
         },
-    },
-    -- {
-        -- performance = {
-            -- rtp = {
-                -- disabled_plugins = { 'netrwPlugin' },  -- 기본 파일 탐색기(netrw) 비활성화
-            -- },
-        -- },
-        -- git = {
-            -- cmd = 'git',  -- MSYS2 셸 문제 방지를 위해 기본 Git 명령 사용
-        -- },
-    -- },
+    },    
 })
 
 -- 자동 컴파일: init.lua 저장 시 파일을 다시 로드하고 플러그인 동기화
@@ -125,8 +146,6 @@ vim.api.nvim_create_autocmd('BufWritePost', {
     end,
 })
 
--- Python3 경로: coc.nvim이 Python 실행 파일을 찾도록 설정
-vim.g.python3_host_prog = '경로/python.EXE'  -- Python 3.13 경로 지정
 
 -- 필요 없는 provider 비활성화
 vim.g.loaded_ruby_provider = 0  -- Ruby provider 비활성화
