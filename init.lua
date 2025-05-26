@@ -41,9 +41,30 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
         },
     },
     -- 구문 파싱: nvim-treesitter
-    { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' },  -- Treesitter 플러그인
+    { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate',  event = { "BufReadPre", "BufNewFile" },
+    dependencies = { "nvim-treesitter/nvim-treesitter-textobjects" },
+    config = function()
+        require("nvim-treesitter.configs").setup({
+            highlight = { enable = true },
+            indent = { enable = true },
+            ensure_installed = { "lua", "javascript", "python", "html", "css" },
+            incremental_selection = {
+                enable = true,
+                keymaps = {
+                    init_selection = "<C-space>",
+                    node_incremental = "<C-space>",
+                    node_decremental = "<bs>",
+                },
+            },
+        })
+    end, },  -- Treesitter 플러그인
+
+
+
+
     -- 터미널 관리: toggleterm.nvim
     { 'akinsho/toggleterm.nvim', tag = '*' },  -- ToggleTerm 플러그인
+
     -- Git 통합: neogit
 	{
 	"NeogitOrg/neogit",
@@ -93,6 +114,11 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
 	},
 	
 	{ "Xuyuanp/nerdtree-git-plugin", lazy = false, dependencies = { "preservim/nerdtree" } },
+
+	{
+        "Valloric/YouCompleteMe",
+        build = "./install.py --clang-completer"  -- C/C++ 지원을 위한 빌드
+    },
 	
 	 { "lewis6991/gitsigns.nvim", event = "BufReadPre", config = function()
       require("gitsigns").setup({
@@ -319,6 +345,19 @@ vim.api.nvim_set_hl(0, 'GitGutterDelete', { fg = '#FF0000' })  -- 삭제된 줄:
 
 -- Lazygit을 열기 위한 키 매핑
 vim.api.nvim_set_keymap('n', '<Leader>gg', ':ToggleTerm direction=horizontal cmd=lazygit<CR>', { noremap = true, silent = true })
+
+vim.g.NERDTreeGitStatusIndicatorMapCustom = {
+    Modified  = '✹',
+    Staged    = '✚',
+    Untracked = '✭',
+    Renamed   = '➜',
+    Unmerged  = '═',
+    Deleted   = '✖',
+    Dirty     = '✗',
+    Ignored   = '☒',
+    Clean     = '✔︎',
+    Unknown   = '?',
+}
 
 -- Lua 플러그인: nvim-autopairs 초기화
 require('nvim-autopairs').setup()  -- 괄호 자동 완성 기능 활성화
