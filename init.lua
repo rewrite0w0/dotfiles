@@ -13,6 +13,9 @@ if not vim.loop.fs_stat(lazypath) then  -- lazy.nvim이 설치되어 있지 않�
 end
 vim.opt.rtp:prepend(lazypath)  -- Neovim의 런타임 경로에 lazy.nvim을 추가하여 플러그인 로드 가능하게 함
 
+vim.g.mapleader = " "
+vim.g.maplocalleader = "\\"
+
 -- lazy.nvim 초기화 및 플러그인 목록
 require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
     {
@@ -26,7 +29,7 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
     -- 코드 포맷팅: vim-prettier
     { 'prettier/vim-prettier', ft = {'javascript', 'typescript', 'css', 'json', 'markdown', 'html', 'javascriptreact', 'typescriptreact'}},
     -- Lua 유틸리티: plenary.nvim
-    'nvim-lua/plenary.nvim',  -- telescope.nvim 등 Lua 플러그인의 공통 유틸리티
+    {'nvim-lua/plenary.nvim'},  -- telescope.nvim 등 Lua 플러그인의 공통 유틸리티
     -- 파일/텍스트 검색: telescope.nvim
     {
         'nvim-telescope/telescope.nvim',
@@ -42,17 +45,71 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
     -- 터미널 관리: toggleterm.nvim
     { 'akinsho/toggleterm.nvim', tag = '*' },  -- ToggleTerm 플러그인
     -- Git 통합: neogit
-    'NeogitOrg/neogit',  -- Neogit 플러그인
+	{
+	"NeogitOrg/neogit",
+		dependencies = {
+			"nvim-lua/plenary.nvim",         -- required
+			"sindrets/diffview.nvim",        -- optional - Diff integration
+
+		-- Only one of these is needed.
+			"nvim-telescope/telescope.nvim", -- optional
+			"ibhagwan/fzf-lua",              -- optional
+			"echasnovski/mini.pick",         -- optional
+			"folke/snacks.nvim",             -- optional
+		},
+	},
     -- 괄호 자동 완성: nvim-autopairs
-    'windwp/nvim-autopairs',  -- 자동으로 괄호 쌍을 완성
+    {
+    'windwp/nvim-autopairs',
+    event = "InsertEnter",
+    config = true
+    -- use opts = {} for passing setup options
+    -- this is equivalent to setup({}) function
+	},  -- 자동으로 괄호 쌍을 완성
     -- 상태바: vim-airline
-    'vim-airline/vim-airline',  -- Airline 플러그인
-    -- 상태바 테마: vim-airline-themes
-    'vim-airline/vim-airline-themes',  -- Airline 테마 모음
+    {
+	"vim-airline/vim-airline",
+	lazy = false,
+	dependencies = {
+		"vim-airline/vim-airline-themes",
+		"ryanoasis/vim-devicons",
+		},
+	},  -- Airline 플러그인
     -- Git 변경 표시: vim-gitgutter
-    'airblade/vim-gitgutter',  -- Git 변경 내역을 라인 옆에 표시
-    { 'preservim/nerdtree' },
-    { 'ryanoasis/vim-devicons' },
+    {
+		"airblade/vim-gitgutter",
+		lazy = false, -- load eagerly to ensure signs appear immediately
+		-- No special config needed unless you want to customize behavior
+	},  -- Git 변경 내역을 라인 옆에 표시    
+    
+	{
+		"tpope/vim-fugitive",
+		cmd = { "Git", "Gdiffsplit", "Gread", "Gwrite", "Ggrep", "GMove", "GDelete", "GBrowse", "GRemove", "GRename" },
+	},
+    
+	{ "preservim/nerdtree", lazy = false, config = function()
+      vim.api.nvim_set_keymap('n', '<C-n>', ':NERDTreeToggle<CR>', { noremap = true, silent = true })
+    end
+	},
+	
+	{ "Xuyuanp/nerdtree-git-plugin", lazy = false, dependencies = { "preservim/nerdtree" } },
+	
+	 { "lewis6991/gitsigns.nvim", event = "BufReadPre", config = function()
+      require("gitsigns").setup({
+        signs = {
+          add = { text = "✅" },
+          change = { text = "🪄" },
+          delete = { text = "❌" },
+          untracked = { text = "👻" },
+        },
+      })
+    end
+	},
+	
+    { 'ryanoasis/vim-devicons', lazy = false},
+	{ 'kdheepak/lazygit.nvim', dependencies = { 'nvim-telescope/telescope.nvim' } },
+	
+	
 	 {
         'hrsh7th/nvim-cmp', -- The main completion plugin
         dependencies = {
@@ -87,7 +144,30 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
             })
         end,
     },
-    'neovim/nvim-lspconfig', -- LSP configuration	
+    {'neovim/nvim-lspconfig'}, -- LSP configuration	
+	
+	{ "lewis6991/gitsigns.nvim", event = "BufReadPre", config = function()
+    require("gitsigns").setup({
+      signs = {
+        change = { hl = "GitSignsChange", text = "│", numhl = "GitSignsChangeNr", linehl = "GitSignsChangeLn" },
+        delete = { hl = "GitSignsDelete", text = "_", numhl = "GitSignsDeleteNr", linehl = "GitSignsDeleteLn" },
+        -- Add other signs as needed
+		},
+      -- Additional configuration options can go here
+		})
+	end,
+	},
+	
+	{ "sindrets/diffview.nvim", 
+	dependencies = { "nvim-tree/nvim-web-devicons" }, 
+	cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFocusFiles" },
+	config = function()
+    require("diffview").setup({
+      -- Additional configuration options can be added here
+    })
+	end,
+	},
+	
     {
         "yetone/avante.nvim",
         event = "VeryLazy",
@@ -133,7 +213,9 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
                 ft = { "markdown", "Avante" },
             },
         },
-    },    
+    },
+  -- automatically check for plugin updates
+  checker = { enabled = true },    
 })
 
 -- 자동 컴파일: init.lua 저장 시 파일을 다시 로드하고 플러그인 동기화
@@ -155,6 +237,15 @@ vim.g.loaded_perl_provider = 0  -- Perl provider 비활성화
 vim.g.prettier_autoformat = 1  -- Prettier로 자동 포맷팅 활성화
 vim.g['airline#extensions#tabline#enabled'] = 1  -- vim-airline의 탭라인 기능 활성화
 vim.g['airline#extensions#tabline#fnamemod'] = ':t'  -- 탭라인에 파일 이름만 표시
+vim.g['airline_powerline_fonts'] = 1
+-- vim.g['airline_theme'] = "dark"
+vim.g['airline#extensions#whitespace#enabled'] = 0
+vim.g['airline#extensions#wordcount#enabled'] = 0
+vim.g['airline#extensions#syntastic#enabled'] = 1
+vim.g['airline_section_c'] = ""
+vim.g['airline_skip_empty_sections'] = 1
+
+
 
 -- 옵션: Neovim의 기본 편집 설정
 vim.opt.termguicolors = true  -- 트루컬러 지원 활성화
@@ -224,6 +315,10 @@ vim.api.nvim_create_autocmd('BufWritePre', {  -- 파일 저장 전 자동 명령
 vim.api.nvim_set_hl(0, 'GitGutterAdd', { fg = '#00FF00' })  -- 추가된 줄: 초록색
 vim.api.nvim_set_hl(0, 'GitGutterChange', { fg = '#0000FF' })  -- 수정된 줄: 파란색
 vim.api.nvim_set_hl(0, 'GitGutterDelete', { fg = '#FF0000' })  -- 삭제된 줄: 빨간색
+
+
+-- Lazygit을 열기 위한 키 매핑
+vim.api.nvim_set_keymap('n', '<Leader>gg', ':ToggleTerm direction=horizontal cmd=lazygit<CR>', { noremap = true, silent = true })
 
 -- Lua 플러그인: nvim-autopairs 초기화
 require('nvim-autopairs').setup()  -- 괄호 자동 완성 기능 활성화
