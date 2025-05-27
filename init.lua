@@ -41,25 +41,7 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
         },
     },
     -- 구문 파싱: nvim-treesitter
-    { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate',  event = { "BufReadPre", "BufNewFile" },
-    dependencies = { "nvim-treesitter/nvim-treesitter-textobjects" },
-    config = function()
-        require("nvim-treesitter.configs").setup({
-            highlight = { enable = true },
-            indent = { enable = true },
-            ensure_installed = { "lua", "javascript", "python", "html", "css" },
-            incremental_selection = {
-                enable = true,
-                keymaps = {
-                    init_selection = "<C-space>",
-                    node_incremental = "<C-space>",
-                    node_decremental = "<bs>",
-                },
-            },
-        })
-    end, },  -- Treesitter 플러그인
-
-
+    { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate',  event = { "BufReadPre", "BufNewFile" }},  -- Treesitter 플러그인
 
 
     -- 터미널 관리: toggleterm.nvim
@@ -114,11 +96,6 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
 	},
 	
 	{ "Xuyuanp/nerdtree-git-plugin", lazy = false, dependencies = { "preservim/nerdtree" } },
-
-	{
-        "Valloric/YouCompleteMe",
-        build = "./install.py --clang-completer"  -- C/C++ 지원을 위한 빌드
-    },
 	
 	 { "lewis6991/gitsigns.nvim", event = "BufReadPre", config = function()
       require("gitsigns").setup({
@@ -193,54 +170,8 @@ require('lazy').setup({  -- lazy.nvim의 플러그인 목록과 설정을 정의
     })
 	end,
 	},
-	
-    {
-        "yetone/avante.nvim",
-        event = "VeryLazy",
-        version = false, -- Never set this value to "*"! Never!
-        opts = {
-            provider = "ollama",
-            ollama = {
-                endpoint = "http://localhost:11434",  -- Ollama 서버 주소
-                model = "gemma3", -- 원하는 모델명 (오타 확인 필요)
-            },
-        },
-        build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false", -- for windows
-        dependencies = {
-            "nvim-treesitter/nvim-treesitter",
-            "stevearc/dressing.nvim",
-            "nvim-lua/plenary.nvim",
-            "MunifTanjim/nui.nvim",
-            "echasnovski/mini.pick", -- for file_selector provider mini.pick
-            "nvim-telescope/telescope.nvim", -- for file_selector provider telescope
-            "hrsh7th/nvim-cmp", -- autocompletion for avante commands and mentions
-            "ibhagwan/fzf-lua", -- for file_selector provider fzf
-            "nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
-            "zbirenbaum/copilot.lua", -- for providers='copilot'
-            {
-                "HakonHarnes/img-clip.nvim",
-                event = "VeryLazy",
-                opts = {
-                    default = {
-                        embed_image_as_base64 = false,
-                        prompt_for_file_name = false,
-                        drag_and_drop = {
-                            insert_mode = true,
-                        },
-                        use_absolute_path = true,  -- Windows 사용자 필수
-                    },
-                },
-            },
-            {
-                'MeanderingProgrammer/render-markdown.nvim',
-                opts = {
-                    file_types = { "markdown", "Avante" },
-                },
-                ft = { "markdown", "Avante" },
-            },
-        },
-    },
-  -- automatically check for plugin updates
+
+   -- automatically check for plugin updates
   checker = { enabled = true },    
 })
 
