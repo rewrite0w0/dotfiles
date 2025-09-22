@@ -121,30 +121,48 @@ require("lazy").setup({
     { "williamboman/mason.nvim", config = true },
     { "williamboman/mason-lspconfig.nvim" },
 
-    -- Lint / Format (Ruff)
+    -- Lint / Format
     {
         "mfussenegger/nvim-lint",
+        event = { "BufReadPre", "BufNewFile" },
         config = function()
-            require("lint").linters_by_ft = { python = { "ruff" } }
-            vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-                callback = function() require("lint").try_lint() end,
+            require("lint").linters_by_ft = {
+                python = { "ruff" },
+                javascript = { "biomejs" },
+                typescript = { "biomejs" },
+                javascriptreact = { "biomejs" },
+                typescriptreact = { "biomejs" },
+                json = { "biomejs" },
+                html = { "biomejs" },
+                css = { "biomejs" },
+            }
+            
+            -- 더 자주 린팅 실행
+            vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
+                callback = function()
+                    -- 현재 버퍼의 파일 타입이 지원되는지 확인
+                    local ft = vim.bo.filetype
+                    if require("lint").linters_by_ft[ft] then
+                        require("lint").try_lint()
+                    end
+                end,
             })
         end,
     },
     {
         "stevearc/conform.nvim",
+        event = { "BufWritePre" },
+        cmd = { "ConformInfo" },
         config = function()
-            require("conform").setup({
-                formatters_by_ft = { python = { "ruff" } },
-                format_on_save = { timeout_ms = 500, lsp_fallback = true },
-            })
+            -- conform 설정은 LSP 설정 이후로 이동
         end,
     },
 
     -- 터미널
     {
         "akinsho/toggleterm.nvim",
-        version = "*",
+        -- version = "*",
+        version = "v2.13.0",
         config = function()
             require("toggleterm").setup({
                 size = 10,
@@ -152,6 +170,7 @@ require("lazy").setup({
                 direction = "horizontal",
                 shade_terminals = true,
                 persist_mode = true,
+                shell = "powershell.exe -NoProfile -ExecutionPolicy RemoteSigned", -- 명시적으로 powershell 지정
             })
         end,
     },
@@ -164,19 +183,49 @@ require("lazy").setup({
 require("mason").setup()
 require("mason-lspconfig").setup({
     ensure_installed = { "pyright", "ruff" },
+    automatic_installation = true,
 })
 
--- LSP 설정
-local lspconfig = require("lspconfig")
-
+-- LSP 설정 (새로운 vim.lsp.config 사용)
 -- Pyright (타입체킹)
-lspconfig.pyright.setup({})
+vim.lsp.config("pyright", {})
 
--- Ruff (lint & format)
-lspconfig.ruff.setup({
-    on_attach = function(client, bufnr)
-        client.server_capabilities.hoverProvider = false -- Ruff는 hover 필요 없음
-    end,
+-- Ruff LSP (lint & format)
+vim.lsp.config("ruff", {
+  on_attach = function(client, bufnr)
+    client.server_capabilities.hoverProvider = false -- Ruff는 hover 필요 없음
+  end,
+})
+
+-- conform.nvim에서 ruff_format 사용하도록 수정
+require("conform").setup({
+    formatters_by_ft = {
+        python = { "ruff_format", "ruff_fix" },
+        javascript = { "biome" },
+        typescript = { "biome" },
+        javascriptreact = { "biome" },
+        typescriptreact = { "biome" },
+        json = { "biome" },
+        html = { "biome" },
+        css = { "biome" },
+    },
+    formatters = {
+        ruff_fix = {
+            command = "ruff",
+            args = { "check", "--fix", "--stdin-filename", "$FILENAME", "-" },
+            stdin = true,
+        },
+        ruff_format = {
+            command = "ruff",
+            args = { "format", "--stdin-filename", "$FILENAME", "-" },
+            stdin = true,
+        },
+    },
+    format_on_save = { 
+        timeout_ms = 1000, 
+        lsp_fallback = true,
+        quiet = false, -- 에러 메시지 표시
+    },
 })
 
 -- 옵션: Neovim 기본 설정
@@ -196,8 +245,11 @@ vim.opt.splitright = true
 vim.opt.splitbelow = true
 vim.opt.updatetime = 250
 vim.opt.shell = "powershell"
-vim.opt.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
+vim.opt.shellcmdflag = "-NoProfile -NoLogo -ExecutionPolicy RemoteSigned -Command"
+vim.opt.shellquote = ""
 vim.opt.shellxquote = ""
+vim.opt.shellpipe = "| Out-File -Encoding UTF8"
+vim.opt.shellredir = "| Out-File -Encoding UTF8"
 
 -- Telescope 단축키
 local builtin = require("telescope.builtin")
