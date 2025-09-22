@@ -135,6 +135,7 @@ require("lazy").setup({
                 json = { "biomejs" },
                 html = { "biomejs" },
                 css = { "biomejs" },
+                rust = { "clippy" },
             }
             
             -- 더 자주 린팅 실행
@@ -182,7 +183,7 @@ require("lazy").setup({
 -- Mason으로 LSP 자동 설치
 require("mason").setup()
 require("mason-lspconfig").setup({
-    ensure_installed = { "pyright", "ruff" },
+    ensure_installed = { "pyright", "ruff", "rust_analyzer" },
     automatic_installation = true,
 })
 
@@ -197,6 +198,17 @@ vim.lsp.config("ruff", {
   end,
 })
 
+-- Rust Analyzer
+vim.lsp.config("rust_analyzer", {
+  settings = {
+    ["rust-analyzer"] = {
+      check = {
+        command = "clippy",
+      },
+    },
+  },
+})
+
 -- conform.nvim에서 ruff_format 사용하도록 수정
 require("conform").setup({
     formatters_by_ft = {
@@ -208,6 +220,7 @@ require("conform").setup({
         json = { "biome" },
         html = { "biome" },
         css = { "biome" },
+        rust = { "rustfmt" },
     },
     formatters = {
         ruff_fix = {
@@ -218,6 +231,11 @@ require("conform").setup({
         ruff_format = {
             command = "ruff",
             args = { "format", "--stdin-filename", "$FILENAME", "-" },
+            stdin = true,
+        },
+        rustfmt = {
+            command = "rustfmt",
+            args = { "--edition=2021" },
             stdin = true,
         },
     },
