@@ -28,9 +28,6 @@ require("lazy").setup({
         end,
     },
 
-    -- Lua 유틸리티
-    { "nvim-lua/plenary.nvim" },
-
     -- Telescope
     {
         "nvim-telescope/telescope.nvim",
@@ -52,7 +49,6 @@ require("lazy").setup({
     },
 
     -- Git UI
-    { "tpope/vim-fugitive", cmd = { "Git", "Gdiffsplit", "Gread", "Gwrite" } },
     { "NeogitOrg/neogit", dependencies = { "nvim-lua/plenary.nvim", "sindrets/diffview.nvim" } },
     {
         "sindrets/diffview.nvim",
@@ -60,22 +56,12 @@ require("lazy").setup({
         cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFocusFiles" },
     },
 
-    -- 상태바 (Airline → Lualine)
+    -- 상태바
     {
         "nvim-lualine/lualine.nvim",
         dependencies = { "nvim-tree/nvim-web-devicons" },
         config = function()
             require("lualine").setup()
-        end,
-    },
-
-    -- 파일 탐색기 (NERDTree → nvim-tree)
-    {
-        "nvim-tree/nvim-tree.lua",
-        dependencies = { "nvim-tree/nvim-web-devicons" },
-        config = function()
-            require("nvim-tree").setup()
-            vim.keymap.set("n", "<C-n>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
         end,
     },
 
@@ -121,48 +107,16 @@ require("lazy").setup({
     { "williamboman/mason.nvim", config = true },
     { "williamboman/mason-lspconfig.nvim" },
 
-    -- Lint / Format
-    {
-        "mfussenegger/nvim-lint",
-        event = { "BufReadPre", "BufNewFile" },
-        config = function()
-            require("lint").linters_by_ft = {
-                python = { "ruff" },
-                javascript = { "biomejs" },
-                typescript = { "biomejs" },
-                javascriptreact = { "biomejs" },
-                typescriptreact = { "biomejs" },
-                json = { "biomejs" },
-                html = { "biomejs" },
-                css = { "biomejs" },
-                rust = { "clippy" },
-            }
-            
-            -- 더 자주 린팅 실행
-            vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
-                callback = function()
-                    -- 현재 버퍼의 파일 타입이 지원되는지 확인
-                    local ft = vim.bo.filetype
-                    if require("lint").linters_by_ft[ft] then
-                        require("lint").try_lint()
-                    end
-                end,
-            })
-        end,
-    },
+    -- Format
     {
         "stevearc/conform.nvim",
         event = { "BufWritePre" },
         cmd = { "ConformInfo" },
-        config = function()
-            -- conform 설정은 LSP 설정 이후로 이동
-        end,
     },
 
     -- 터미널
     {
         "akinsho/toggleterm.nvim",
-        -- version = "*",
         version = "v2.13.0",
         config = function()
             require("toggleterm").setup({
@@ -171,7 +125,7 @@ require("lazy").setup({
                 direction = "horizontal",
                 shade_terminals = true,
                 persist_mode = true,
-                shell = "powershell.exe -NoProfile -ExecutionPolicy RemoteSigned", -- 명시적으로 powershell 지정
+                -- shell 강제 지정 삭제 → 기본 pwsh.exe 사용 (더 빠름)
             })
         end,
     },
@@ -187,18 +141,13 @@ require("mason-lspconfig").setup({
     automatic_installation = true,
 })
 
--- LSP 설정 (새로운 vim.lsp.config 사용)
--- Pyright (타입체킹)
+-- LSP 설정
 vim.lsp.config("pyright", {})
-
--- Ruff LSP (lint & format)
 vim.lsp.config("ruff", {
   on_attach = function(client, bufnr)
-    client.server_capabilities.hoverProvider = false -- Ruff는 hover 필요 없음
+    client.server_capabilities.hoverProvider = false
   end,
 })
-
--- Rust Analyzer
 vim.lsp.config("rust_analyzer", {
   settings = {
     ["rust-analyzer"] = {
@@ -209,7 +158,7 @@ vim.lsp.config("rust_analyzer", {
   },
 })
 
--- conform.nvim에서 ruff_format 사용하도록 수정
+-- conform.nvim 설정
 require("conform").setup({
     formatters_by_ft = {
         python = { "ruff_format", "ruff_fix" },
@@ -239,14 +188,14 @@ require("conform").setup({
             stdin = true,
         },
     },
-    format_on_save = { 
-        timeout_ms = 1000, 
+    format_on_save = {
+        timeout_ms = 1000,
         lsp_fallback = true,
-        quiet = false, -- 에러 메시지 표시
+        quiet = false,
     },
 })
 
--- 옵션: Neovim 기본 설정
+-- 기본 옵션
 vim.opt.termguicolors = true
 vim.cmd("syntax enable")
 vim.opt.autoindent = true
@@ -258,16 +207,12 @@ vim.opt.title = true
 vim.opt.wrap = true
 vim.opt.linebreak = true
 vim.opt.showmatch = true
-vim.opt.laststatus = 2
+vim.opt.laststatus = 0
+vim.opt.statusline = "-"
+vim.opt.fillchars:append({ stl = "-", stlnc = "-" })
 vim.opt.splitright = true
 vim.opt.splitbelow = true
 vim.opt.updatetime = 250
-vim.opt.shell = "powershell"
-vim.opt.shellcmdflag = "-NoProfile -NoLogo -ExecutionPolicy RemoteSigned -Command"
-vim.opt.shellquote = ""
-vim.opt.shellxquote = ""
-vim.opt.shellpipe = "| Out-File -Encoding UTF8"
-vim.opt.shellredir = "| Out-File -Encoding UTF8"
 
 -- Telescope 단축키
 local builtin = require("telescope.builtin")
