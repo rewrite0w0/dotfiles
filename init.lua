@@ -1,5 +1,5 @@
 -- ==========================================================================
--- 1. 기본 옵션
+-- 1. 기본 옵션 (Windows 11 PowerShell & 기본 UI)
 -- ==========================================================================
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
@@ -21,32 +21,16 @@ vim.opt.smartindent = true
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
-vim.opt.wrap = false
 vim.opt.scrolloff = 8
 vim.opt.signcolumn = "yes"
 vim.opt.updatetime = 250
 vim.opt.clipboard = "unnamedplus"
 
--- UI 및 동작 설정
-vim.opt.termguicolors = true
-vim.opt.number = true
-vim.opt.relativenumber = true
-vim.opt.autoindent = true
-vim.opt.smartindent = true
-vim.opt.tabstop = 4
-vim.opt.shiftwidth = 4
-vim.opt.expandtab = true
-
--- 줄 바꿈 관련 세트 (이 부분이 추가/수정되었습니다)
-vim.opt.wrap = true            -- 줄 바꿈 사용
-vim.opt.linebreak = true       -- 단어 단위로 줄 바꿈 (단어 중간 끊김 방지)
-vim.opt.breakindent = true     -- 줄 바꿈된 줄도 들여쓰기 유지
-vim.opt.showbreak = "↳ "       -- 줄 바꿈된 곳 앞에 표시할 기호 (취향껏 변경 가능)
-
-vim.opt.scrolloff = 8
-vim.opt.signcolumn = "yes"
-vim.opt.updatetime = 250
-vim.opt.clipboard = "unnamedplus"
+-- 줄 바꿈 설정
+vim.opt.wrap = true
+vim.opt.linebreak = true
+vim.opt.breakindent = true
+vim.opt.showbreak = "↳ "
 
 -- ==========================================================================
 -- 2. Lazy.nvim 부트스트래핑
@@ -62,7 +46,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 -- ==========================================================================
--- 3. 플러그인 목록
+-- 3. 플러그인 목록 (담백한 핵심 구성)
 -- ==========================================================================
 require("lazy").setup({
     -- [테마]
@@ -75,7 +59,7 @@ require("lazy").setup({
         end,
     },
 
-    -- [탐색]
+    -- [탐색] Telescope
     {
         "nvim-telescope/telescope.nvim",
         tag = "0.1.8",
@@ -94,18 +78,15 @@ require("lazy").setup({
         end
     },
 
-    -- [구문 강조] Treesitter (React, HTML, CSS, JSON 포함)
+    -- [구문 강조] Treesitter
     { 
         "nvim-treesitter/nvim-treesitter", 
         build = ":TSUpdate", 
         event = { "BufReadPre", "BufNewFile" },
-        config = function()
-            require("nvim-treesitter.install").compilers = { "zig" }
-    
+        config = function()   
             require("nvim-treesitter.configs").setup({
                 ensure_installed = { 
-                    "rust", "lua", "javascript", "typescript", "tsx", 
-                    "json", "html", "css", "markdown", "markdown_inline" 
+                    "rust", "lua", "javascript", "typescript", "tsx", "html", "css", "json"
                 },
                 highlight = { enable = true },
                 indent = { enable = true },
@@ -121,52 +102,19 @@ require("lazy").setup({
         keys = { { "-", "<cmd>Oil<cr>", desc = "Open parent directory" } } 
     },
 
-    -- [Git]
+    -- [Git 표시]
     { "lewis6991/gitsigns.nvim", event = "BufReadPre", config = true },
-    { 
-        "NeogitOrg/neogit", 
-        dependencies = { "nvim-lua/plenary.nvim", "sindrets/diffview.nvim" }, 
-        cmd = "Neogit",
-        config = true
-    },
 
     -- [상태바]
     { "nvim-lualine/lualine.nvim", dependencies = { "nvim-tree/nvim-web-devicons" }, config = true },
 
-    -- [편의성]
+    -- [코딩 편의성]
     { "windwp/nvim-autopairs", event = "InsertEnter", config = true },
     { "echasnovski/mini.surround", config = true },
     { "numToStr/Comment.nvim", config = true },
-    { "echasnovski/mini.indentscope", config = true, event = "BufReadPre" },
-    { 
-        "folke/todo-comments.nvim", 
-        dependencies = { "nvim-lua/plenary.nvim" }, 
-        event = "BufReadPre",
-        config = true 
-    },
     { "folke/which-key.nvim", config = true },
-    { 
-        "folke/flash.nvim", 
-        event = "VeryLazy", 
-        opts = {}, 
-        keys = {
-            { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
-        },
-    },
 
-    -- [에러 목록]
-    { 
-        "folke/trouble.nvim", 
-        config = true,
-        keys = {
-            { "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics (Trouble)" },
-        },
-    },
-
-    -- [UI]
-    { "shortcuts/no-neck-pain.nvim", cmd = "NoNeckPain", config = true },
-
-    -- [자동완성]
+    -- [자동완성 엔진]
     {
         "hrsh7th/nvim-cmp",
         event = "InsertEnter",
@@ -174,7 +122,6 @@ require("lazy").setup({
             "hrsh7th/cmp-nvim-lsp",
             "hrsh7th/cmp-buffer",
             "hrsh7th/cmp-path",
-            "hrsh7th/cmp-cmdline",
             "L3MON4D3/LuaSnip",
             "saadparwaiz1/cmp_luasnip",
         },
@@ -208,7 +155,7 @@ require("lazy").setup({
         end,
     },
 
-    -- [LSP]
+    -- [LSP 기본 백본]
     { 
         "neovim/nvim-lspconfig",
         dependencies = {
@@ -217,10 +164,10 @@ require("lazy").setup({
         }
     },
 
-    -- [Formatting]
+    -- [포맷터 관리]
     { "stevearc/conform.nvim", event = "BufWritePre" },
 
-    -- [터미널]
+   -- [터미널]
     {
         "akinsho/toggleterm.nvim",
         version = "*",
@@ -233,6 +180,8 @@ require("lazy").setup({
             })
         end,
     },
+		}, {
+		rocks = { enabled = false },
 })
 
 -- ==========================================================================
@@ -247,10 +196,8 @@ if pcall(require, "cmp_nvim_lsp") then
 end
 
 require("mason-lspconfig").setup({
-    -- React Native는 주로 vtsls나 ts_ls(구 tsserver)를 사용하며, 
-    -- Biome은 포맷팅과 린팅을 담당합니다.
     ensure_installed = { 
-        "rust_analyzer", "biome", "ts_ls", "html", "cssls", "jsonls" 
+        "rust_analyzer", "biome", "ts_ls", "html", "cssls", "jsonls"
     },
     automatic_installation = true,
     
@@ -272,18 +219,16 @@ require("mason-lspconfig").setup({
             })
         end,
 
-        -- TS/JS/React/React Native를 위한 설정
         ["ts_ls"] = function()
             lspconfig.ts_ls.setup({
                 capabilities = capabilities,
-                -- 프로젝트 상황에 따라 추가 설정 가능
             })
         end,
     }
 })
 
 -- ==========================================================================
--- 5. Formatting 설정 (Conform)
+-- 5. Formatting 설정 (Conform - 자동 포맷팅)
 -- ==========================================================================
 require("conform").setup({
     formatters_by_ft = {
@@ -292,7 +237,7 @@ require("conform").setup({
         javascriptreact = { "biome" },
         typescriptreact = { "biome" },
         json = { "biome" },
-        html = { "biome" }, -- Biome 혹은 필요시 다른 포맷터 사용 가능
+        html = { "biome" },
         css = { "biome" },
         rust = { "rustfmt" },
     },
@@ -303,27 +248,28 @@ require("conform").setup({
 })
 
 -- ==========================================================================
--- 6. 키맵 설정 (동일)
+-- 6. 키맵 설정
 -- ==========================================================================
 local builtin = require("telescope.builtin")
 
+-- Telescope 검색
 vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Find Files" })
 vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Live Grep" })
 vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Buffers" })
 vim.keymap.set("n", "<leader>fh", builtin.help_tags, { desc = "Help Tags" })
 
-vim.keymap.set("n", "<leader>gg", "<cmd>Neogit<cr>", { desc = "Neogit" })
-
+-- 창 이동 (Alt + h, j, k, l)
 vim.keymap.set("n", "<A-h>", "<C-w>h", { noremap = true })
 vim.keymap.set("n", "<A-j>", "<C-w>j", { noremap = true })
 vim.keymap.set("n", "<A-k>", "<C-w>k", { noremap = true })
 vim.keymap.set("n", "<A-l>", "<C-w>l", { noremap = true })
 
+-- 터미널 모드 창 이동 및 탈출
 vim.keymap.set("t", "<A-h>", [[<C-\><C-n><C-w>h]], { noremap = true })
 vim.keymap.set("t", "<A-j>", [[<C-\><C-n><C-w>j]], { noremap = true })
 vim.keymap.set("t", "<A-k>", [[<C-\><C-n><C-w>k]], { noremap = true })
 vim.keymap.set("t", "<A-l>", [[<C-\><C-n><C-w>l]], { noremap = true })
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 
-vim.keymap.set("n", "<leader>n", "<cmd>NoNeckPain<cr>", { desc = "Toggle NoNeckPain" })
+-- Oil.nvim 파일 탐색기 연동
 vim.keymap.set("n", "<leader>e", "<cmd>Oil<cr>", { desc = "File Explorer" })
