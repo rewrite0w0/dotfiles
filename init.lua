@@ -34,27 +34,29 @@ end
 -- 📦 설치 명령어:
 -- 
 --   macOS (Homebrew):
---     brew install git node biome oxlint
+--     brew install git node biome oxlint tree-sitter
 -- 
 --   Windows (npm):
 --     npm install -g @biomejs/biome
 --     npm install -g oxlint
+--     npm install -g tree-sitter-cli
 -- 
 --   Linux - Fedora:
 --     sudo dnf install -y git nodejs npm
---     npm install -g @biomejs/biome oxlint
+--     npm install -g @biomejs/biome oxlint tree-sitter-cli
 -- 
 --   Linux - Ubuntu/Debian:
 --     sudo apt update && sudo apt install -y git nodejs npm
---     npm install -g @biomejs/biome oxlint
+--     npm install -g @biomejs/biome oxlint tree-sitter-cli
 -- =============================================
 
 local required_tools = {
-    { name = "git",   cmd = "git",   important = true },
-    { name = "node",  cmd = "node",  important = true },
-    { name = "npm",   cmd = "npm",   important = true },
-    { name = "biome", cmd = "biome", important = true },
-    { name = "oxlint",cmd = "oxlint",important = false }, -- oxc 린팅 CLI
+    { name = "git",         cmd = "git",         important = true },
+    { name = "node",        cmd = "node",         important = true },
+    { name = "npm",         cmd = "npm",          important = true },
+    { name = "biome",       cmd = "biome",        important = true },
+    { name = "oxlint",      cmd = "oxlint",       important = false }, -- oxc 린팅 CLI
+    { name = "tree-sitter", cmd = "tree-sitter",  important = true },  -- treesitter 파서 컴파일에 필요
 }
 
 local missing = {}
@@ -130,6 +132,7 @@ end
 --   • toggleterm: 터미널 토글
 --   • nvim-cmp: 자동완성
 --   • nvim-lspconfig: LSP 설정 (Biome + oxlint)
+--   • conform.nvim: 저장 시 포매팅 (Biome/rustfmt)
 --   • nvim-autopairs: 괄호 자동 완성
 --   • vim-gitgutter: Git diff 표시
 --   • nerdtree: 파일 트리
@@ -144,15 +147,36 @@ require("lazy").setup({
     { "nvim-telescope/telescope.nvim", tag = "0.1.8", dependencies = { "nvim-lua/plenary.nvim" } },
 
     -- Treesitter: 문법 강조 및 구조 분석
+    -- ⚠️ nvim-treesitter 저장소가 2026-04-03에 archive 되었습니다.
+    --    구버전(master, configs.lua 방식)은 완전히 폐기되어 더 이상 작동하지 않습니다.
+    --    Neovim 0.12에서는 main 브랜치의 새 API를 써야 하고,
+    --    tree-sitter CLI가 로컬에 설치되어 있어야 합니다.
+    -- 
+    --    tree-sitter CLI 설치:
+    --      macOS:   brew install tree-sitter
+    --      npm:     npm install -g tree-sitter-cli
+    --      cargo:   cargo install tree-sitter-cli
+    -- 
+    --    Lua, Vim, Markdown 등은 Neovim 0.12에 이미 내장되어 있어서
+    --    highlight 기본 활성화됨 (별도 설정 불필요).
     {
         "nvim-treesitter/nvim-treesitter",
+        branch = "main",
         build = ":TSUpdate",
+        lazy = false,
         config = function()
-            require("nvim-treesitter.configs").setup({
-                ensure_installed = { "lua", "javascript", "typescript", "tsx", "html", "css", "json", "rust", "vim", "vimdoc" },
-                highlight = { enable = true },
-                indent = { enable = true },
-            })
+            local ensure_installed = {
+                "javascript", "typescript", "tsx",
+                "html", "css", "json", "rust",
+            }
+            local ok, config = pcall(require, "nvim-treesitter.config")
+            local already_installed = ok and config.get_installed() or {}
+            local to_install = vim.iter(ensure_installed)
+                :filter(function(p) return not vim.tbl_contains(already_installed, p) end)
+                :totable()
+            if #to_install > 0 then
+                require("nvim-treesitter").install(to_install)
+            end
         end,
     },
 
@@ -260,40 +284,35 @@ require("lazy").setup({
                     vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
                     vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
                     
-                    -- 포매팅 (Biome)
+                    -- 포매팅 (수동 실행용, 저장 시 자동포매팅은 conform.nvim이 담당)
                     vim.keymap.set("n", "<leader>fm", function() vim.lsp.buf.format({ async = true }) end, opts)
                 end,
             })
         end,
-    }, 
-  {
-    "stevearc/conform.nvim",
-    event = { "BufWritePre" },
-    cmd = { "ConformInfo" },
-    opts = {
-        formatters_by_ft = {
-            javascript = { "biome" },
-            typescript = { "biome" },
-            javascriptreact = { "biome" },
-            typescriptreact = { "biome" },
-            json = { "biome" },
-            html = { "biome" },
-            css = { "biome" },
-            rust = { "rustfmt" },
-        },
-        format_on_save = {
-            timeout_ms = 500,
-            lsp_fallback = true,
+    },
+
+    -- conform.nvim: 저장 시 자동 포매팅 (Biome / rustfmt)
+    {
+        "stevearc/conform.nvim",
+        event = { "BufWritePre" },
+        cmd = { "ConformInfo" },
+        opts = {
+            formatters_by_ft = {
+                javascript = { "biome" },
+                typescript = { "biome" },
+                javascriptreact = { "biome" },
+                typescriptreact = { "biome" },
+                json = { "biome" },
+                html = { "biome" },
+                css = { "biome" },
+                rust = { "rustfmt" },
+            },
+            format_on_save = {
+                timeout_ms = 500,
+                lsp_fallback = true,
+            },
         },
     },
-},
-
-
-
-
-
-
--- 끝라인
 })
 
 -- =============================================
@@ -306,8 +325,9 @@ require("lazy").setup({
 --   <Space>fg : 텍스트 검색 (Telescope)
 --   <Ctrl>b  : 파일 트리 토글 (NERDTree)
 --   <Ctrl>t  : 터미널 토글
---   <Space>fm: 코드 포매팅 (Biome)
+--   <Space>fm: 코드 포매팅 수동 실행
 --   :OxcLint : oxlint 린팅 실행
+--   :ConformInfo : 저장 시 어떤 포매터가 붙는지 확인
 -- 
 -- LSP 단축키:
 --   gd       : 정의로 이동
@@ -335,22 +355,6 @@ vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Live grep" })
 
 -- NERDTree: 파일 브라우저
 vim.keymap.set("n", "<C-b>", ":NERDTreeToggle<CR>:NERDTreeRefreshRoot<CR>", { silent = true })
-
--- =============================================
--- Biome 자동 포매팅 (저장 시)
--- =============================================
--- 아래 확장자 파일 저장 시 자동으로 Biome으로 포매팅됩니다.
--- Biome이 설치되어 있어야 합니다: npm install -g @biomejs/biome
--- =============================================
-
-vim.api.nvim_create_autocmd("BufWritePre", {
-    pattern = { "*.js", "*.jsx", "*.ts", "*.tsx", "*.html", "*.css", "*.json" },
-    callback = function()
-        if vim.fn.executable("biome") == 1 then
-            vim.lsp.buf.format({ async = false })
-        end
-    end,
-})
 
 -- =============================================
 -- oxlint 수동 린팅 커맨드
