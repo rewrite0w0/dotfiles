@@ -353,6 +353,24 @@ local builtin = require("telescope.builtin")
 vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Find files" })
 vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Live grep" })
 
+-- =============================================
+-- 🪟 창 이동 및 크기 조절 키매핑
+-- =============================================
+
+-- Ctrl + h/j/k/l 로 분할된 창 간 이동
+vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "왼쪽 창으로 이동" })
+vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "아래쪽 창으로 이동" })
+vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "위쪽 창으로 이동" })
+vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "오른쪽 창으로 이동" })
+
+-- + / - 로 창 높이 조절 (화면 크기 조절)
+vim.keymap.set("n", "+", "<C-w>+", { desc = "현재 창 높이 확대" })
+vim.keymap.set("n", "-", "<C-w>-", { desc = "현재 창 높이 축소" })
+
+-- (옵션) 좌우 너비 조절도 함께 원하시면 추가하세요
+vim.keymap.set("n", "<leader>+", "<C-w>>", { desc = "현재 창 너비 확대" })
+vim.keymap.set("n", "<leader>-", "<C-w><", { desc = "현재 창 너비 축소" })
+
 -- NERDTree: 파일 브라우저
 vim.keymap.set("n", "<C-b>", ":NERDTreeToggle<CR>:NERDTreeRefreshRoot<CR>", { silent = true })
 
