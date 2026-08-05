@@ -25,7 +25,7 @@
 --   <Space>ff     파일 이름 검색 (Telescope)        ← Ctrl+P
 --   <Space>fg     프로젝트 전체 텍스트 검색         ← Ctrl+Shift+F
 --   <Space>e      현재 파일 폴더를 oil로 열기       ← 사이드바 탐색기
---   -             oil 안에서 상위 폴더로            (oil 버퍼일 때)
+--   -             oil 안에서 상위 폴더로            (oil 버퍼일 때, 일반 버퍼에서도 oil 열기)
 --
 -- ■ 파일 시스템 조작 (oil 버퍼에서)
 --   이름 변경     글자 수정 후 :w
@@ -37,13 +37,14 @@
 --   닫기          <C-c> 또는 :bd
 --
 -- ■ 창(윈도우) 관리
---   Ctrl + h/j/k/l     창 이동
+--   Ctrl + h/j/k/l     창 이동 (터미널 모드에서도 동작)
 --   Alt  + h/j/k/l     창 이동 (Windows / Linux)
---   + / -              창 높이 조절
+--   <leader>+ / <leader>_   창 높이 조절 (+ / - 대신 leader 사용, '-'는 oil 전용)
 --   <Space>+ / <Space>- 창 너비 조절
 --
 -- ■ 터미널
 --   <C-t>         하단 터미널 토글
+--   (터미널 모드에서 Ctrl+hjkl로 다른 창으로 바로 이동 가능)
 --
 -- ■ Git
 --   <Space>gg     Neogit (스테이징·커밋·푸시)
@@ -487,6 +488,11 @@ vim.keymap.set("n", "<leader>fg", builtin.live_grep,  { desc = "Live grep" })
 -- ============================================================================
 -- <Space>e  현재 파일의 디렉토리를 oil로 연다
 -- -         oil 권장 관례: 상위 폴더 (oil 버퍼가 아닐 때는 현재 파일 기준 상위)
+--
+-- ⚠️ 주의: 이 전역 "-" 매핑은 반드시 섹션 8의 창 크기 조절 매핑보다
+--          "나중에" 정의되어야 살아남습니다 (Lua는 나중 매핑이 이전 것을 덮어씀).
+--          그래서 섹션 8에서는 "-"를 창 높이 축소에 사용하지 않고
+--          <leader>_ 를 대신 사용합니다.
 -- ============================================================================
 vim.keymap.set("n", "<leader>e", function()
   require("oil").open()
@@ -499,24 +505,26 @@ end, { desc = "Open oil (parent-friendly)" })
 -- ============================================================================
 -- 8. 창 이동 / 크기 (OS 분기)
 -- ============================================================================
--- 공통: Ctrl + hjkl
+-- 공통: Ctrl + hjkl (일반 버퍼)
 vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "창 ←" })
 vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "창 ↓" })
 vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "창 ↑" })
 vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "창 →" })
 
+-- 터미널 모드에서도 Ctrl + hjkl 로 창 이동 (toggleterm 안에서 다른 창으로 즉시 이동)
+-- <C-\><C-n> 으로 터미널 모드 → normal 모드 탈출 후 창 이동
+local term_opts = { silent = true }
+vim.keymap.set("t", "<C-h>", [[<C-\><C-n><C-w>h]], term_opts)
+vim.keymap.set("t", "<C-j>", [[<C-\><C-n><C-w>j]], term_opts)
+vim.keymap.set("t", "<C-k>", [[<C-\><C-n><C-w>k]], term_opts)
+vim.keymap.set("t", "<C-l>", [[<C-\><C-n><C-w>l]], term_opts)
+
 -- 공통: 크기
+-- "-" 는 섹션 7에서 oil 전용으로 이미 매핑했으므로 여기서는 절대 재사용하지 않는다.
 vim.keymap.set("n", "+",         "<C-w>+", { desc = "높이 +" })
-vim.keymap.set("n", "-",         "<C-w>-", { desc = "높이 -" }) -- oil의 - 와 겹침 주의
 vim.keymap.set("n", "<leader>+", "<C-w>>", { desc = "너비 +" })
 vim.keymap.set("n", "<leader>-", "<C-w><", { desc = "너비 -" })
-
--- 참고:
---   위에서 normal 모드 "-" 를 oil 열기로 매핑했기 때문에
---   창 높이 관련 "-" 는 가려집니다.
---   높이 관련은 아래 대안을 쓰거나, oil 매핑을 다른 키로 바꾸세요.
---   대안 예: <C--> 또는 <leader>_
-vim.keymap.set("n", "<leader>_", "<C-w>-", { desc = "높이 - (대안)" })
+vim.keymap.set("n", "<leader>_", "<C-w>-", { desc = "높이 -" })
 
 if is_windows or is_linux then
   -- WezTerm(Windows)은 Alt+Shift+hjkl 을 팬 이동에 쓰므로
@@ -525,6 +533,12 @@ if is_windows or is_linux then
   vim.keymap.set("n", "<A-j>", "<C-w>j", { desc = "창 ↓ Alt" })
   vim.keymap.set("n", "<A-k>", "<C-w>k", { desc = "창 ↑ Alt" })
   vim.keymap.set("n", "<A-l>", "<C-w>l", { desc = "창 → Alt" })
+
+  -- 터미널 모드에서도 Alt+hjkl 지원 (Windows/Linux)
+  vim.keymap.set("t", "<A-h>", [[<C-\><C-n><C-w>h]], term_opts)
+  vim.keymap.set("t", "<A-j>", [[<C-\><C-n><C-w>j]], term_opts)
+  vim.keymap.set("t", "<A-k>", [[<C-\><C-n><C-w>k]], term_opts)
+  vim.keymap.set("t", "<A-l>", [[<C-\><C-n><C-w>l]], term_opts)
 end
 -- macOS: Option 키 충돌 때문에 Ctrl만 사용.
 -- WezTerm에서 Option을 Meta로 쓰려면 wezterm.lua:
