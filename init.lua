@@ -8,6 +8,12 @@
 --
 -- 저장 후 nvim 재시작 → 필요 시 :Lazy sync
 --
+-- 강제 리셋
+-- macOS / Linux : 
+--   rm -rf ~/.local/share/nvim
+--   rm -rf ~/.cache/nvim
+-- Windows       : 
+--   Remove-Item -Recurse -Force $env:LOCALAPPDATA\nvim-data
 -- ============================================================================
 -- 0. 전체 활용법 (VS Code 습관 → Vim 습관)
 -- ============================================================================
