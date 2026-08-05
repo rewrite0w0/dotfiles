@@ -559,3 +559,26 @@ vim.api.nvim_create_user_command("OxcLint", function()
 end, {})
 
 notify("✅ Vim-only 설정 로드 완료 (oil + Trouble + Neogit)", vim.log.levels.INFO)
+
+
+-- 이 부분에서 필수 도구들을 체크합니다.
+-- 누락된 도구가 있으면 아래 명령어를 터미널에서 실행하세요:
+-- 
+-- 📦 설치 명령어:
+-- 
+--   macOS (Homebrew):
+--     brew install git node biome oxlint tree-sitter
+-- 
+--   Windows (npm):
+--     npm install -g @biomejs/biome
+--     npm install -g oxlint
+--     npm install -g tree-sitter-cli
+-- 
+--   Linux - Fedora:
+--     sudo dnf install -y git nodejs npm
+--     npm install -g @biomejs/biome oxlint tree-sitter-cli
+-- 
+--   Linux - Ubuntu/Debian:
+--     sudo apt update && sudo apt install -y git nodejs npm
+--     npm install -g @biomejs/biome oxlint tree-sitter-cli
+-- =============================================
