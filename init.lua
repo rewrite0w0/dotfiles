@@ -87,6 +87,16 @@
 --   /검색어        기본은 대소문자 무시, 대문자가 섞이면 자동으로 구분 (ignorecase+smartcase)
 --   scrolloff      커서가 화면 맨 위/아래에 딱 붙지 않고 8줄 여유를 두고 스크롤
 --
+-- ■ 자동 설치 (Mason)
+--   Neovim을 처음 켜면 mason.nvim이 ts_ls / html / cssls / jsonls /
+--   rust_analyzer / biome / rustfmt 를 백그라운드에서 자동으로 다운로드합니다.
+--   최초 실행 시 몇 초~수십 초 정도 설치가 진행되는 동안은 해당 LSP 기능이
+--   아직 안 붙을 수 있습니다. (인터넷 연결 필요)
+--   :Mason        설치 상태 확인 / 수동 설치·삭제·업데이트 (i / X / u 키)
+--   git, node, npm 은 Mason 자체가 그 위에서 동작하는 도구라 자동 설치가
+--   불가능해 시스템에 미리 설치되어 있어야 합니다.
+--   oxlint, tree-sitter CLI 는 Mason 레지스트리에 없어 여전히 수동 설치 대상입니다.
+--
 -- ■ 기타
 --   :OxcLint      현재 파일 oxlint 수동 실행
 --   :ConformInfo  어떤 포매터가 붙는지 확인
@@ -105,16 +115,20 @@ end
 -- ============================================================================
 -- 1. 필수 CLI 도구 체크
 -- ============================================================================
--- git, node, biome 등이 PATH에 없으면 알려 줍니다.
--- 없어도 Neovim은 뜨지만, LSP/포맷/트리는 해당 기능이 동작하지 않습니다.
+-- git, node, npm은 Neovim/Mason이 동작하기 위한 "전제 조건"이라 자동 설치가
+-- 불가능합니다 (Mason 스스로가 node/npm 위에서 돌아가는 도구이기 때문). 이 3개만
+-- 여기서 수동 체크하고, LSP 서버(ts_ls, html, cssls, jsonls, rust_analyzer, biome)와
+-- 포매터(rustfmt)는 아래 5번 섹션의 mason.nvim / mason-lspconfig / mason-tool-installer가
+-- Neovim을 처음 켤 때 자동으로 다운로드·설치해줍니다. brew/npm -g로 미리 깔아둘 필요가 없어졌습니다.
+--
+-- [예외] oxlint, tree-sitter CLI는 Mason 공식 레지스트리에 없어서(2026-08 기준) 계속 수동 설치가 필요합니다.
 -- ============================================================================
 local required_tools = {
   { name = "git",         cmd = "git",         important = true },
   { name = "node",        cmd = "node",        important = true },
   { name = "npm",         cmd = "npm",         important = true },
-  { name = "biome",       cmd = "biome",       important = true },
-  { name = "oxlint",      cmd = "oxlint",      important = false },
-  { name = "tree-sitter", cmd = "tree-sitter", important = true },
+  { name = "oxlint",      cmd = "oxlint",      important = false }, -- Mason 레지스트리에 없어 수동 설치 필요
+  { name = "tree-sitter", cmd = "tree-sitter", important = false }, -- main 브랜치는 대부분 CLI 없이도 :TSUpdate로 동작, 있으면 더 안정적
 }
 
 local missing = {}
@@ -245,6 +259,55 @@ require("lazy").setup({
     config = function()
       vim.cmd("colorscheme tokyonight-storm")
     end,
+  },
+
+  -- --------------------------------------------------------------------------
+  -- Mason: LSP 서버 / 포매터 자동 설치 관리자
+  --
+  -- [추가된 이유] 예전에는 brew/npm으로 biome, ts_ls 등을 "직접" 설치해야 했고,
+  -- 설치가 안 돼 있으면 섹션 1의 required_tools 체크에서 경고만 띄우고 끝이었습니다.
+  -- Mason을 쓰면 Neovim 안에서 LSP 서버/포매터를 자동으로 다운로드·설치하고,
+  -- 설치된 실행파일 경로를 Neovim의 $PATH에 자동으로 추가해줍니다.
+  -- priority를 높게 줘서 다른 플러그인보다 먼저 로드되게 해, mason의 bin 경로가
+  -- $PATH에 최대한 일찍 등록되도록 합니다.
+  --
+  -- 사용법: :Mason 을 열면 설치 상태를 GUI 리스트로 보고, i(설치)/X(삭제)/u(업데이트) 가능
+  -- --------------------------------------------------------------------------
+  {
+    "williamboman/mason.nvim",
+    lazy = false,
+    priority = 900,
+    opts = {},
+  },
+
+  -- mason-lspconfig: mason이 설치한 LSP 서버를 vim.lsp.config/enable과 자동으로 연결
+  -- ensure_installed에 적어둔 서버는 Neovim을 처음 켤 때 자동으로 설치가 시작됩니다.
+  -- (아래 nvim-lspconfig 설정에서 쓰는 서버 이름과 반드시 동일해야 합니다)
+  {
+    "williamboman/mason-lspconfig.nvim",
+    dependencies = { "williamboman/mason.nvim" },
+    opts = {
+      ensure_installed = { "ts_ls", "html", "cssls", "jsonls", "rust_analyzer", "biome" },
+      automatic_installation = true,
+    },
+  },
+
+  -- mason-tool-installer: LSP 서버가 아닌 순수 CLI 도구 자동 설치용 플러그인.
+  --
+  -- [주의] rustfmt는 여기서 뺐습니다. mason 레지스트리는 npm/pip/cargo/go 등으로
+  -- "독립적으로" 설치 가능한 패키지만 등록돼 있는데, rustfmt는 그런 독립 패키지가 아니라
+  -- rustup의 "컴포넌트"(rustup component add rustfmt)로 설치되는 방식이라 mason 레지스트리
+  -- 자체에 존재하지 않습니다. (rust_analyzer는 레지스트리에 있어서 mason-lspconfig로 정상 설치됨)
+  -- rustfmt는 10번 섹션 하단의 안내대로 rustup으로 직접 설치해야 합니다.
+  --
+  -- 지금은 ensure_installed가 비어 있지만, 이후 npm/cargo/pip로 설치 가능한 다른 포매터나
+  -- 린터(예: prettier, shfmt, stylua 등)를 자동 설치하고 싶을 때 이 목록에 이름만 추가하면 됩니다.
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    dependencies = { "williamboman/mason.nvim" },
+    opts = {
+      ensure_installed = {},
+    },
   },
 
   -- --------------------------------------------------------------------------
@@ -492,7 +555,9 @@ require("lazy").setup({
   -- --------------------------------------------------------------------------
   {
     "neovim/nvim-lspconfig",
-    dependencies = { "hrsh7th/cmp-nvim-lsp" },
+    -- [추가] mason-lspconfig에 의존성을 걸어, 이 config 함수가 실행되기 전에
+    -- mason-lspconfig의 ensure_installed 설치가 먼저 트리거되도록 순서를 보장합니다.
+    dependencies = { "hrsh7th/cmp-nvim-lsp", "williamboman/mason-lspconfig.nvim" },
     config = function()
       local servers = { "ts_ls", "html", "cssls", "jsonls", "rust_analyzer" }
 
@@ -520,9 +585,11 @@ require("lazy").setup({
         }),
       })
 
-      if vim.fn.executable("biome") == 1 then
-        vim.lsp.config("biome", { cmd = { "biome", "lsp-proxy" }, capabilities = capabilities })
-      end
+      -- [수정] biome은 이제 mason-lspconfig의 ensure_installed에 들어있어서
+      -- Neovim이 처음 켜질 때 자동으로 설치됩니다. 예전처럼 vim.fn.executable("biome")로
+      -- 시스템에 수동 설치돼 있는지 체크할 필요 없이 바로 설정하면 됩니다.
+      -- (단, 최초 설치 중에는 잠깐 biome LSP가 안 붙을 수 있음 — :Mason에서 진행 상황 확인 가능)
+      vim.lsp.config("biome", { cmd = { "biome", "lsp-proxy" }, capabilities = capabilities })
 
       -- [설명 보강] oxlint 진단(diagnostic) capability를 의도적으로 끈 이유
       -- biome과 oxlint를 동시에 LSP로 붙이면 같은 문제에 대해 진단 메시지가
@@ -540,8 +607,8 @@ require("lazy").setup({
       end
 
       vim.lsp.enable(servers)
-      if vim.fn.executable("biome") == 1 then vim.lsp.enable("biome") end
-      if vim.fn.executable("oxlint") == 1 then vim.lsp.enable("oxlint") end
+      vim.lsp.enable("biome") -- mason이 설치를 보장하므로 executable 체크 불필요
+      if vim.fn.executable("oxlint") == 1 then vim.lsp.enable("oxlint") end -- oxlint는 여전히 수동 설치 대상
 
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
@@ -720,23 +787,24 @@ notify("✅ Vim-only 설정 로드 완료 (oil + Trouble + Neogit + gitsigns)", 
 
 
 -- 이 부분에서 필수 도구들을 체크합니다.
--- 누락된 도구가 있으면 아래 명령어를 터미널에서 실행하세요:
+-- git / node / npm은 Mason이 동작하기 위한 전제 조건이라 자동 설치가 안 되므로
+-- 아래처럼 시스템에 미리 설치해 두어야 합니다. (biome, LSP 서버, rustfmt는
+-- 이제 Mason이 Neovim 안에서 알아서 설치하므로 별도 명령어가 필요 없습니다)
 --
--- 📦 설치 명령어:
+-- 📦 설치 명령어 (git / node / npm 만 해당):
 --
 --   macOS (Homebrew):
---     brew install git node biome oxlint tree-sitter
+--     brew install git node
 --
---   Windows (npm):
---     npm install -g @biomejs/biome
---     npm install -g oxlint
---     npm install -g tree-sitter-cli
+--   Windows (winget 또는 공식 설치파일):
+--     winget install Git.Git OpenJS.NodeJS.LTS
 --
 --   Linux - Fedora:
 --     sudo dnf install -y git nodejs npm
---     npm install -g @biomejs/biome oxlint tree-sitter-cli
 --
 --   Linux - Ubuntu/Debian:
 --     sudo apt update && sudo apt install -y git nodejs npm
---     npm install -g @biomejs/biome oxlint tree-sitter-cli
+--
+-- oxlint / tree-sitter CLI는 Mason 레지스트리에 없어 필요하면 아래처럼 별도 설치:
+--   npm install -g oxlint tree-sitter-cli
 -- =============================================
