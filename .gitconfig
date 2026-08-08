@@ -1,0 +1,66 @@
+[core]
+	autocrlf = false
+
+[alias]
+	ignore = \\
+	setup = "!git init && git commit --allow-empty -m \"Initial commit\" && git branch main && echo \"Repo initialized with develop & main\""
+	
+[color]
+        ui = true
+
+[column]
+        ui = auto
+
+[branch]
+        sort = -committerdate
+
+[tag]
+        sort = version:refname
+
+[diff]
+        algorithm = histogram
+        colorMoved = plain
+        mnemonicPrefix = true
+        renames = true
+
+[push]
+        default = simple
+        autoSetupRemote = true
+        followTags = true
+
+[fetch]
+        prune = true
+        pruneTags = true
+        all = true
+
+[help]
+        autocorrect = prompt
+
+[commit]
+        verbose = true
+
+[rerere]
+        enabled = true
+        autoupdate = true
+
+[rebase]
+        autoSquash = true
+        autoStash = true
+        updateRefs = true
+
+[merge]
+        conflictstyle = zdiff3
+[pull]
+        rebase = true
+
+[user]
+	name = OH TAEJUN
+	email = rewrite0w0@gmail.com
+[init]
+	defaultBranch = develop
+
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
