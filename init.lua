@@ -21,6 +21,28 @@
 -- 0. 전체 활용법 (VS Code 습관 → Vim 습관)
 -- ============================================================================
 --
+-- ■ "Leader"(리더 키)란?
+--   Vim 단축키는 기본적으로 알파벳 한두 글자(dd, yy, gd...)를 그대로 씁니다.
+--   그런데 커스텀 단축키를 아무 글자에나 막 배정하면 기존 Vim 동작(예: d, y, g)과
+--   충돌하기 쉽습니다. 그래서 "이 키를 먼저 누르면 그 다음은 내가 만든 커스텀
+--   단축키다" 라는 접두사(prefix) 역할을 하는 특수 키 하나를 정해두는데, 그게 리더 키입니다.
+--
+--   아래 3번 섹션에서 vim.g.mapleader = " " (스페이스바) 로 지정했습니다.
+--   즉 이 설정에서 <Space>로 시작하는 모든 단축키(<Space>ff, <Space>e, <Space>gg 등)는
+--   전부 "리더 + 다음 글자" 조합이며, 순서대로 스페이스바를 누른 다음 글자를 눌러야 합니다.
+--   (동시에 누르는 게 아니라 스페이스 → 떼고 → 다음 글자, 순차 입력입니다)
+--
+--   예) <Space>ff  =  스페이스바 누르고 뗀 뒤 → f → f  (Telescope 파일 찾기)
+--       <Space>gg  =  스페이스바 누르고 뗀 뒤 → g → g  (Neogit 열기)
+--
+--   문서 안에서 <leader> 라고 적힌 건 전부 이 리더 키(=스페이스)를 가리키는 것이고,
+--   <Space>로 표기된 것과 같은 뜻입니다. vim.g.mapleader 값을 바꾸면(예: ",") 이 문서의
+--   모든 <Space>OO 단축키가 그 키로 바뀝니다.
+--
+--   참고로 vim.g.maplocalleader = "\\" (백슬래시)는 "로컬 리더"로, 특정 파일 타입
+--   플러그인이 그 파일 종류에서만 쓰는 단축키에 쓰는 별도의 접두사입니다.
+--   이 설정에서는 별도 로컬 리더 단축키를 정의하고 있진 않아 당장은 몰라도 무방합니다.
+--
 -- ■ 파일 찾기 / 이동
 --   <Space>ff     파일 이름 검색 (Telescope)        ← Ctrl+P
 --   <Space>fg     프로젝트 전체 텍스트 검색         ← Ctrl+Shift+F
@@ -63,18 +85,33 @@
 --   <Space>hb     현재 줄 blame 보기               (gitsigns)
 --   (사인 컬럼의 +/~/- 표시는 gitsigns가 자동으로 그림)
 --
--- ■ LSP / 진단 / 리팩터
+-- ■ LSP / 진단(에러·워닝) / 호버 / 리팩터
+--   ※ "진단(diagnostic)"은 LSP가 잡아내는 에러·워닝·힌트를 통틀어 부르는 이름입니다.
+--
 --   gd            정의로 이동
 --   gr            참조 찾기
 --   gi            구현으로 이동
---   K             호버 문서
+--   K             호버(hover) 문서 — 커서가 있는 심볼의 타입/시그니처/문서를 팝업으로 표시
+--                 (같은 위치에서 K를 다시 누르면 팝업 안으로 포커스 이동 → q 또는 <Esc>로 닫기)
 --   <Space>rn     이름 변경
 --   <Space>ca     코드 액션
 --   <Space>fm     수동 포맷
---   <Space>xx     전체 진단 (Trouble)
---   <Space>xX     현재 버퍼 진단
---   <Space>xs     심볼 목록
---   <Space>xl     LSP 정의/참조 목록
+--
+--   ── 에러 / 워닝(진단) 확인하는 4가지 방법 ──
+--   1) 사인 컬럼(줄 번호 왼쪽)의 아이콘   → 어느 줄에 문제가 있는지 한눈에 표시
+--        (E = Error, W = Warn, I = Info, H = Hint 아이콘이 해당 줄 옆에 뜸)
+--   2) <Space>d     커서가 있는 줄의 진단 메시지를 팝업(float)으로 바로 보기  ← 가장 자주 씀
+--                   (vim.diagnostic.open_float, 아래 6번 섹션에서 keymap 정의)
+--   3) ]d / [d      다음 / 이전 진단으로 커서 이동 (파일 전체를 훑을 때)
+--   4) <Space>xx    Trouble로 전체 진단을 리스트 창에서 한 번에 보기 (프로젝트 전역)
+--      <Space>xX    Trouble로 "현재 버퍼"의 진단만 리스트로 보기
+--
+--   ── 그 외 메시지 확인 ──
+--   :messages     nvim이 띄웠던 알림(vim.notify 등) 히스토리를 전부 다시 보기
+--                 (예: Mason 자동 설치 진행 메시지, 저장 시 포맷 에러 등이 스크롤되어 지나갔을 때)
+--   :LspLog       LSP 서버 자체의 로그 (서버가 아예 안 붙거나 죽었을 때 원인 확인용)
+--   <Space>xs     현재 버퍼의 심볼(함수/변수) 목록 보기 (Trouble)
+--   <Space>xl     LSP 정의/참조 결과를 리스트 창으로 보기 (Trouble)
 --
 -- ■ 편집 보조
 --   <Space>n      No Neck Pain (집중 모드, 좌우 여백)
@@ -218,6 +255,17 @@ vim.opt.smartcase  = true
 -- 커서가 화면 맨 위/아래 줄에 붙을 때까지 기다리지 않고, 항상 위아래로 8줄의
 -- 여유를 두고 미리 스크롤합니다. 코드 읽을 때 시야가 훨씬 편해집니다.
 vim.opt.scrolloff = 8
+
+-- [추가] 진단(에러·워닝) 표시 방식
+-- virtual_text: 문제가 있는 줄 오른쪽 끝에 에러/워닝 메시지를 인라인으로 바로 보여줌
+--               (전체 메시지가 길면 잘려 보일 수 있어, 전체를 보려면 <Space>d 사용)
+-- severity_sort: 여러 진단이 겹칠 때 더 심각한 것(Error)이 사인 컬럼에 우선 표시됨
+-- float.border: <Space>d / K 등으로 뜨는 팝업 창에 테두리를 그려서 배경과 구분되게 함
+vim.diagnostic.config({
+  virtual_text = true,
+  severity_sort = true,
+  float = { border = "rounded", source = true },
+})
 
 -- ============================================================================
 -- 4. OS별 셸
@@ -552,6 +600,7 @@ require("lazy").setup({
   --
   -- 버퍼에 LSP가 붙으면:
   --   gd gr gi K  <Space>rn  <Space>ca  <Space>fm
+  --   에러/워닝(진단) 보기:  <Space>d (현재 줄) / ]d [d (다음·이전 진단으로 이동)
   -- --------------------------------------------------------------------------
   {
     "neovim/nvim-lspconfig",
@@ -623,6 +672,19 @@ require("lazy").setup({
           vim.keymap.set("n", "<leader>fm", function()
             vim.lsp.buf.format({ async = true })
           end, opts)
+
+          -- [추가] 에러/워닝(진단) 확인용 키맵
+          -- 사인 컬럼 아이콘만으로는 "무슨 에러인지" 메시지 전체를 볼 수 없어서,
+          -- 커서가 있는 줄의 진단 메시지를 팝업으로 띄우는 키맵을 별도로 추가합니다.
+          -- (virtual_text로도 인라인 표시는 되지만, 메시지가 길면 잘리기 때문에 이 팝업이 더 확실함)
+          vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float,
+            vim.tbl_extend("force", opts, { desc = "현재 줄 진단(에러/워닝) 보기" }))
+          -- ]d / [d : 파일 안에서 다음/이전 진단 위치로 커서를 바로 이동
+          -- (버퍼 전체를 <Space>xx로 리스트로 보는 대신, 훑으면서 하나씩 확인하고 싶을 때 사용)
+          vim.keymap.set("n", "]d", function() vim.diagnostic.jump({ count = 1 }) end,
+            vim.tbl_extend("force", opts, { desc = "다음 진단으로 이동" }))
+          vim.keymap.set("n", "[d", function() vim.diagnostic.jump({ count = -1 }) end,
+            vim.tbl_extend("force", opts, { desc = "이전 진단으로 이동" }))
         end,
       })
     end,
