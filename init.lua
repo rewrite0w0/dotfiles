@@ -85,14 +85,28 @@
 --   <Space>hb     현재 줄 blame 보기               (gitsigns)
 --   (사인 컬럼의 +/~/- 표시는 gitsigns가 자동으로 그림)
 --
--- ■ LSP / 진단(에러·워닝) / 호버 / 리팩터
+-- ■ LSP / 진단(에러·워닝) / 호버 / 리팩터 / "정의로 이동" 정리
 --   ※ "진단(diagnostic)"은 LSP가 잡아내는 에러·워닝·힌트를 통틀어 부르는 이름입니다.
 --
---   gd            정의로 이동
---   gr            참조 찾기
---   gi            구현으로 이동
---   K             호버(hover) 문서 — 커서가 있는 심볼의 타입/시그니처/문서를 팝업으로 표시
+--   ── 커서를 옮긴 뒤 키로 이동 (기본, 모든 OS 공통) ──
+--   gd            정의(definition)로 이동 — 함수/변수가 "어디서 만들어졌는지"로 점프
+--   gD            선언(declaration)으로 이동 — C/C++ 헤더처럼 정의와 선언이 분리된
+--                 언어에서만 의미가 다름. TS/JS/Rust 등에서는 gd와 사실상 동일하게 동작.
+--   gr            참조(references) 찾기 — 이 심볼을 "어디서 쓰고 있는지" 전체 목록
+--   gi            구현(implementation)으로 이동 — 인터페이스/트레잇의 실제 구현부로 점프
+--   K             호버(hover) 문서 — 타입/시그니처/문서를 팝업으로 표시 (정의로 "이동"은 아님)
 --                 (같은 위치에서 K를 다시 누르면 팝업 안으로 포커스 이동 → q 또는 <Esc>로 닫기)
+--   <C-o>         이동하기 "직전" 위치로 되돌아가기 (gd/gr로 점프한 뒤 원래 자리로 복귀할 때 필수)
+--   <C-i>         <C-o>로 되돌아간 걸 다시 앞으로
+--
+--   ── 마우스 클릭으로 이동 (VS Code의 Ctrl+클릭 습관) ──
+--   Ctrl + 좌클릭       정의로 이동 (gd와 동일 동작)   ← 아래 5/6번 섹션에서 새로 추가한 매핑
+--   더블 좌클릭         정의로 이동 (Ctrl 없이도 동일 동작, 트랙패드 사용자를 위한 보조)
+--   일반 좌클릭         Vim 기본 동작 그대로 "커서만" 그 위치로 이동 (점프 아님)
+--   ※ 마우스가 아예 반응하지 않는다면 vim.opt.mouse = "a" 가 켜져 있는지 확인
+--     (터미널 자체의 마우스 리포팅을 그 터미널 앱이 지원해야 동작합니다 — 대부분의 최신
+--     터미널(iTerm2, WezTerm, Windows Terminal 등)은 기본 지원)
+--
 --   <Space>rn     이름 변경
 --   <Space>ca     코드 액션
 --   <Space>fm     수동 포맷
@@ -113,6 +127,13 @@
 --   <Space>xs     현재 버퍼의 심볼(함수/변수) 목록 보기 (Trouble)
 --   <Space>xl     LSP 정의/참조 결과를 리스트 창으로 보기 (Trouble)
 --
+-- ■ 폴더 구조를 "한눈에" 훑어보기 (트리뷰가 필요할 때)
+--   oil.nvim(<Space>e)은 한 번에 폴더 하나만 보여주는 방식이라, 프로젝트 전체
+--   구조를 트리 형태로 한눈에 조망하는 용도로는 맞지 않습니다. 대신:
+--   <C-t> 로 터미널을 연 뒤 `tree -L 3` (설치 필요: brew/apt install tree) 등으로
+--   깊이를 지정해 훑어보는 것을 권장합니다. 상시 사이드바 트리(nvim-tree 등)가
+--   필요하면 별도 플러그인 추가가 필요합니다 (이 설정엔 미포함).
+--
 -- ■ 편집 보조
 --   <Space>n      No Neck Pain (집중 모드, 좌우 여백)
 --   저장 시       Biome / rustfmt 자동 포맷 (conform)
@@ -123,6 +144,8 @@
 -- ■ 검색 / 기타 옵션
 --   /검색어        기본은 대소문자 무시, 대문자가 섞이면 자동으로 구분 (ignorecase+smartcase)
 --   scrolloff      커서가 화면 맨 위/아래에 딱 붙지 않고 8줄 여유를 두고 스크롤
+--   마우스         mouse = "a" 로 전체 모드에서 마우스 사용 가능 (클릭 이동, 스크롤,
+--                  분할창 경계 드래그로 크기 조절 등)
 --
 -- ■ 자동 설치 (Mason)
 --   Neovim을 처음 켜면 mason.nvim이 ts_ls / html / cssls / jsonls /
@@ -225,6 +248,13 @@ vim.opt.cursorline     = true
 vim.opt.hidden         = true  -- 버퍼 숨김 허용 (toggleterm 등에 필요)
 vim.opt.signcolumn     = "yes" -- git/LSP 사인 공간 고정 (레이아웃 흔들림 방지)
 vim.opt.updatetime     = 250
+
+-- [추가] 마우스 지원
+-- 기본 Vim은 마우스 입력을 거의 무시합니다(터미널이 대신 처리). "a"는 모든 모드
+-- (Normal/Visual/Insert/Command 등)에서 마우스를 Neovim이 받아 처리하게 합니다.
+-- 이게 켜져 있어야 아래 5/6번 섹션의 "Ctrl+클릭으로 정의 이동" 매핑이 동작하고,
+-- 그 외에도 클릭으로 커서 이동, 휠 스크롤, 분할창 경계 드래그로 크기 조절이 가능해집니다.
+vim.opt.mouse = "a"
 
 -- [추가] 시스템 클립보드 연동
 -- 기본값 상태에서는 y/p가 Vim 내부 레지스터만 사용해서, 다른 앱(브라우저, 슬랙 등)과
@@ -599,8 +629,9 @@ require("lazy").setup({
   --   biome (있으면), oxlint (있으면)
   --
   -- 버퍼에 LSP가 붙으면:
-  --   gd gr gi K  <Space>rn  <Space>ca  <Space>fm
+  --   gd gD gr gi K  <Space>rn  <Space>ca  <Space>fm
   --   에러/워닝(진단) 보기:  <Space>d (현재 줄) / ]d [d (다음·이전 진단으로 이동)
+  --   마우스: Ctrl+좌클릭 / 더블좌클릭 → 정의로 이동 (gd와 동일)
   -- --------------------------------------------------------------------------
   {
     "neovim/nvim-lspconfig",
@@ -663,15 +694,40 @@ require("lazy").setup({
         group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
         callback = function(ev)
           local opts = { buffer = ev.buf, silent = true }
-          vim.keymap.set("n", "gd",         vim.lsp.buf.definition, opts)
-          vim.keymap.set("n", "gr",         vim.lsp.buf.references, opts)
-          vim.keymap.set("n", "gi",         vim.lsp.buf.implementation, opts)
-          vim.keymap.set("n", "K",          vim.lsp.buf.hover, opts)
+
+          -- [정리] "이동" 계열: 커서를 옮긴 뒤 사용
+          -- gd = 정의 / gD = 선언(대부분 언어에서 gd와 동일하게 동작) / gr = 참조 / gi = 구현
+          vim.keymap.set("n", "gd", vim.lsp.buf.definition,
+            vim.tbl_extend("force", opts, { desc = "정의로 이동" }))
+          vim.keymap.set("n", "gD", vim.lsp.buf.declaration,
+            vim.tbl_extend("force", opts, { desc = "선언으로 이동" }))
+          vim.keymap.set("n", "gr", vim.lsp.buf.references,
+            vim.tbl_extend("force", opts, { desc = "참조 찾기" }))
+          vim.keymap.set("n", "gi", vim.lsp.buf.implementation,
+            vim.tbl_extend("force", opts, { desc = "구현으로 이동" }))
+          vim.keymap.set("n", "K",  vim.lsp.buf.hover,
+            vim.tbl_extend("force", opts, { desc = "호버 문서 보기" }))
+
           vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
           vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
           vim.keymap.set("n", "<leader>fm", function()
             vim.lsp.buf.format({ async = true })
           end, opts)
+
+          -- [추가] 마우스 클릭으로 정의 이동 (VS Code의 Ctrl+클릭 습관)
+          -- 위 3번 섹션에서 vim.opt.mouse = "a"로 마우스를 켜둔 것을 전제로 합니다.
+          -- 일반 좌클릭은 Vim 기본 동작(커서만 이동)을 그대로 두고, "Ctrl+좌클릭"과
+          -- "더블 좌클릭"(트랙패드에서 Ctrl 누르기 번거로운 사용자를 위한 보조) 두 가지에만
+          -- gd(정의로 이동)를 연결합니다. 일반 클릭 동작을 덮어쓰지 않으므로 텍스트
+          -- 선택/커서 이동 등 기존 마우스 습관과 충돌하지 않습니다.
+          vim.keymap.set("n", "<C-LeftMouse>", function()
+            vim.cmd("normal! " .. vim.keycode("<LeftMouse>")) -- 클릭한 위치로 먼저 커서 이동
+            vim.lsp.buf.definition()
+          end, vim.tbl_extend("force", opts, { desc = "Ctrl+클릭: 정의로 이동" }))
+
+          vim.keymap.set("n", "<2-LeftMouse>", function()
+            vim.lsp.buf.definition()
+          end, vim.tbl_extend("force", opts, { desc = "더블클릭: 정의로 이동" }))
 
           -- [추가] 에러/워닝(진단) 확인용 키맵
           -- 사인 컬럼 아이콘만으로는 "무슨 에러인지" 메시지 전체를 볼 수 없어서,
