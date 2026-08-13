@@ -396,10 +396,29 @@ require("lazy").setup({
   -- Telescope: 퍼지 찾기 (파일·문자열)
   --   <Space>ff  파일
   --   <Space>fg  live grep
+  --
+  -- [수정] preview.treesitter = false
+  -- telescope의 미리보기 창은 기본적으로 treesitter로 문법 하이라이트를 넣으려 시도합니다.
+  -- 그런데 이 시도는 내부적으로 nvim-treesitter의 "master 브랜치 시절" API인
+  -- `ft_to_lang` 함수를 호출하는데, 우리가 쓰는 nvim-treesitter는 `main` 브랜치(새 API)라
+  -- 그 함수가 아예 존재하지 않습니다. 그 결과 <Space>fg / <Space>ff로 미리보기를 스크롤할
+  -- 때마다 "attempt to call field 'ft_to_lang' (a nil value)" 에러가 반복해서 뜹니다.
+  -- treesitter main 브랜치는 telescope처럼 옛 API에 의존하는 플러그인과의 호환을 보장하지
+  -- 않으므로, telescope 쪽의 treesitter 미리보기 하이라이트 자체를 꺼서 충돌을 피합니다.
+  -- (미리보기는 treesitter 대신 일반 filetype 기반 syntax 하이라이트로 대체되어 계속 색은 입혀집니다)
   {
     "nvim-telescope/telescope.nvim",
     tag = "0.1.8",
     dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      require("telescope").setup({
+        defaults = {
+          preview = {
+            treesitter = false,
+          },
+        },
+      })
+    end,
   },
 
   -- --------------------------------------------------------------------------
