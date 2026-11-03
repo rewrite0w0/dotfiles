@@ -20,7 +20,6 @@
 -- ============================================================================
 -- 0. 전체 활용법 (VS Code 습관 → Vim 습관)
 -- ============================================================================
---
 -- ■ "Leader"(리더 키)란?
 --   Vim 단축키는 기본적으로 알파벳 한두 글자(dd, yy, gd...)를 그대로 씁니다.
 --   그런데 커스텀 단축키를 아무 글자에나 막 배정하면 기존 Vim 동작(예: d, y, g)과
@@ -365,7 +364,7 @@ require("lazy").setup({
     "williamboman/mason-lspconfig.nvim",
     dependencies = { "williamboman/mason.nvim" },
     opts = {
-      ensure_installed = { "ts_ls", "html", "cssls", "jsonls", "rust_analyzer", "biome" },
+      ensure_installed = { "ts_ls", "html", "cssls", "jsonls", "rust_analyzer", "biome", "gopls" } ,
       automatic_installation = true,
     },
   },
@@ -658,7 +657,7 @@ require("lazy").setup({
     -- mason-lspconfig의 ensure_installed 설치가 먼저 트리거되도록 순서를 보장합니다.
     dependencies = { "hrsh7th/cmp-nvim-lsp", "williamboman/mason-lspconfig.nvim" },
     config = function()
-      local servers = { "ts_ls", "html", "cssls", "jsonls", "rust_analyzer" }
+      local servers = { "ts_ls", "html", "cssls", "jsonls", "rust_analyzer", "gopls" }
 
       -- [추가] cmp-nvim-lsp의 확장 capabilities를 서버에 전달
       -- 이전에는 cmp-nvim-lsp를 nvim-cmp 쪽 의존성으로만 설치해두고
@@ -730,7 +729,10 @@ require("lazy").setup({
           vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
           vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
           vim.keymap.set("n", "<leader>fm", function()
-            vim.lsp.buf.format({ async = true })
+              require("conform").format({
+              async = true,
+              lsp_fallback = true,
+            })
           end, opts)
 
           -- [추가] 마우스 클릭으로 정의 이동 (VS Code의 Ctrl+클릭 습관)
@@ -784,9 +786,10 @@ require("lazy").setup({
         html            = { "biome" },
         css             = { "biome" },
         rust            = { "rustfmt" },
+        go              = {"goimports", "gofmt"},
       },
       format_on_save = {
-        timeout_ms = 500,
+        timeout_ms = 3000,
         lsp_fallback = true,
       },
     },
